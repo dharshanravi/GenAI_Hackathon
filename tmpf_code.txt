@@ -1,0 +1,59 @@
+from azure.core.credentials import AzureKeyCredential
+from azure.search.documents import SearchClient
+ 
+# Set up your Azure Cognitive Search credentials
+search_service_name = ""
+index_name = "finalversion2-empidx"
+admin_api_key = ""
+ 
+# Create a SearchClient
+endpoint = f"https://{search_service_name}.search.windows.net"
+search_client = SearchClient(endpoint=endpoint,
+                             index_name=index_name,
+                             credential=AzureKeyCredential(admin_api_key))
+ 
+# Define your search query
+search_query = "total number of awards won by sales and marketing"
+ 
+# Perform the search
+results = search_client.search(search_query)
+ 
+ 
+# Collect search results
+search_results = []
+for result in results:
+    search_results.append(result)
+ 
+# Prepare the input for OpenAI
+search_results_text = "\n".join([str(result) for result in search_results])
+ 
+print(search_results_text)
+ 
+import openai
+# Set up your Azure OpenAI credentials
+openai.api_type = "azure"
+openai.api_base = ""
+openai.api_version = "2024-08-01-preview"
+openai.api_key = ""
+deployment_name = "gpt-4o"
+ 
+# Define the query for OpenAI
+query = f"Based on the following search results,calculate  total number of awards won by sales and marketing?\n\n{search_results_text}"
+ 
+# Generate a response using OpenAI
+response = openai.ChatCompletion.create(
+    engine=deployment_name,
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": query}
+    ],
+    max_tokens=4800
+)
+ 
+# Print the response from OpenAI
+print(response.choices[0].message['content'].strip())
+
+
+
+openai.error.InvalidRequestError: Invalid 'messages[1].content': string too long. Expected a string with maximum length 1048576, but got a string with length 61756457 instead.
+
